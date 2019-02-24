@@ -70,9 +70,34 @@ void sha256()
     for (t=16; t<64; t++)
     {
         sig1(W[t-2]) + W[t-7] + sig0(W[t-15]) + W[t-16];
-    }
 
-}
+        // Initalize a..h
+        a=H[0];
+        b=H[1];
+        c=H[2];
+        d=H[3];
+        e=H[4];
+        f=H[5];
+        g=H[6];
+        h=H[7];
+
+        // For loop
+        for(t = 0; t < 64; t++)
+        {
+            T1 = h + SIG_1(e) + Ch(e,f,g) + K[t] + W[t];
+            T2 = SIG_0(a) + Maj(a,b,c);
+            h = g;
+            g = f;
+            f = e;
+            e = d + T1;
+            d = c;
+            c = b;
+            b = a;
+            a = T1 + T2;
+        };
+    };
+
+};
 
 // Section 4.1.2  
 __uint32_t sig0(__uint32_t x)
@@ -82,13 +107,13 @@ __uint32_t sig0(__uint32_t x)
     // SHR = Shift Right
     // ROTR_n(x) = (x >> n) | (x << (32-n))
     // SHR_n(x) = (x >> n)
-     return (rotr(7,x) ^ rotr(18, x) ^ shr(3,x));
+    return (rotr(7,x) ^ rotr(18, x) ^ shr(3,x));
 
 };
 
 __uint32_t sig1(__uint32_t x)
 {
-     return (rotr(17,x) ^ rotr(19,x) ^ shr(10,x));
+    return (rotr(17,x) ^ rotr(19,x) ^ shr(10,x));
 };
 
 // Rotate bits right
