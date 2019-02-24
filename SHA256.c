@@ -1,18 +1,21 @@
 // Author: Edward Eldridge 
 // Program: SHA-256 Algorithm implentation in C
 // Resources: https://github.com/EddieEldridge/SHA256-in-C/blob/master/README.md
+// Section Reference: https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-void sha256();
-
-// Section 4.1.2
+// Function decleration
 __uint32_t sig0(__uint32_t x);
 __uint32_t sig1(__uint32_t x);
 
-// Main method
+__uint32_t rotr(__uint32_t n, __uint16_t x);
+__uint32_t shr(__uint32_t n, __uint16_t x);
+
+
+// ==== Main ===
 int main(int argc, char *argv[]) 
 {
      // Print header
@@ -24,6 +27,8 @@ int main(int argc, char *argv[])
      // Main return method
      return 0;
 }
+
+// === Functions ===
 
 void sha256()
 {
@@ -68,3 +73,32 @@ void sha256()
     }
 
 }
+
+// Section 4.1.2  
+__uint32_t sig0(__uint32_t x)
+{
+    // Section 3.2
+    // ROTR = Rotate Right 
+    // SHR = Shift Right
+    // ROTR_n(x) = (x >> n) | (x << (32-n))
+    // SHR_n(x) = (x >> n)
+     return (rotr(7,x) ^ rotr(18, x) ^ shr(3,x));
+
+};
+
+__uint32_t sig1(__uint32_t x)
+{
+     return (rotr(17,x) ^ rotr(19,x) ^ shr(10,x));
+};
+
+// Rotate bits right
+__uint32_t rotr(__uint32_t n, __uint16_t x)
+{
+    return (x >> n) | (x << (32-n));
+};
+
+// Shift bits right
+__uint32_t shr(__uint32_t n, __uint16_t x)
+{
+    return (x >> n);
+};
