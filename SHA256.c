@@ -8,6 +8,10 @@
 
 void sha256();
 
+// Section 4.1.2
+__uint32_t sig0(__uint32_t x);
+__uint32_t sig1(__uint32_t x);
+
 // Main method
 int main(int argc, char *argv[]) 
 {
@@ -35,7 +39,6 @@ void sha256()
 
     // Hash values
     // Taken from https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
-    // Section 5.3.3
     __uint32_t H[8] = {
         0x6a09e667,
         0xbb67ae85,
@@ -49,5 +52,19 @@ void sha256()
 
     // The current message block
     __uint32_t M[16];
+
+    // For loop variable
+    int t;
+
+    for(t=0; t<16; t++)
+    {
+        // Add the current message block to our messag schedule
+        W[t] = M[t];
+    }
+
+    for (t=16; t<64; t++)
+    {
+        sig1(W[t-2]) + W[t-7] + sig0(W[t-15]) + W[t-16];
+    }
 
 }
