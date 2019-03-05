@@ -8,12 +8,18 @@
 #include <string.h>
 
 // Function decleration
+// See Section 4.1.2
 __uint32_t sig0(__uint32_t x);
 __uint32_t sig1(__uint32_t x);
 
 __uint32_t rotr(__uint32_t n, __uint16_t x);
 __uint32_t shr(__uint32_t n, __uint16_t x);
 
+__uint32_t SIG0(__uint32_t x);
+__uint32_t SIG1(__uint32_t x);
+
+__uint32_t Ch(__uint32_t x,__uint32_t y,__uint32_t z);
+__uint32_t Maj(__uint32_t x,__uint32_t y,__uint32_t z);
 
 // ==== Main ===
 int main(int argc, char *argv[]) 
@@ -58,7 +64,7 @@ void sha256()
     // The current message block
     __uint32_t M[16];
 
-    // For loop variable
+    // For loop to iterate through the message block 
     int t;
 
     for(t=0; t<16; t++)
@@ -87,6 +93,8 @@ void sha256()
         // Step 3
         for(t = 0; t < 64; t++)
         {
+            // Creating new variables
+            // Need to write 'K', 
             T1 = h + SIG_1(e) + Ch(e,f,g) + K[t] + W[t];
             T2 = SIG_0(a) + Maj(a,b,c);
             h = g;
@@ -114,13 +122,14 @@ void sha256()
 };
 
 // Section 4.1.2  
+// ROTR = Rotate Right 
+// SHR = Shift Right
+// ROTR_n(x) = (x >> n) | (x << (32-n))
+// SHR_n(x) = (x >> n)
 __uint32_t sig0(__uint32_t x)
 {
     // Section 3.2
-    // ROTR = Rotate Right 
-    // SHR = Shift Right
-    // ROTR_n(x) = (x >> n) | (x << (32-n))
-    // SHR_n(x) = (x >> n)
+   
     return (rotr(7,x) ^ rotr(18, x) ^ shr(3,x));
 
 };
