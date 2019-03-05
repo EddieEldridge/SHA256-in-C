@@ -95,8 +95,8 @@ void sha256()
         {
             // Creating new variables
             // Need to write 'K', 
-            T1 = h + SIG_1(e) + Ch(e,f,g) + K[t] + W[t];
-            T2 = SIG_0(a) + Maj(a,b,c);
+            T1 = h + SIG1(e) + Ch(e,f,g) + K[t] + W[t];
+            T2 = SIG0(a) + Maj(a,b,c);
             h = g;
             g = f;
             f = e;
@@ -149,4 +149,26 @@ __uint32_t rotr(__uint32_t n, __uint16_t x)
 __uint32_t shr(__uint32_t n, __uint16_t x)
 {
     return (x >> n);
+};
+
+__uint32_t SIG0(__uint32_t x)
+{
+    return (rotr(2,x) ^ rotr(13, x) ^ rotr(22,x));
+};
+
+__uint32_t SIG1(__uint32_t x)
+{
+    return (rotr(6,x) ^ rotr(11, x) ^ rotr(25,x));
+};
+
+// Choose
+__uint32_t Ch(__uint32_t x,__uint32_t y,__uint32_t z)
+{
+    return ((x & y) ^ ((!x) & z));
+};
+
+// Majority decision
+__uint32_t Maj(__uint32_t x,__uint32_t y,__uint32_t z)
+{
+    return ((x & y) ^ (x & z) ^ (y & z));
 };
