@@ -38,7 +38,10 @@ int main(int argc, char *argv[])
 
 void sha256()
 {
+    printf("Starting SHA256 algorithm....\n");
+
     // Declare the K constant
+    // Defined in Section 4.2.2
     __uint32_t K[] =
     {
         0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 
@@ -58,7 +61,7 @@ void sha256()
         0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
         0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f
     };
-    
+
     // Message schedule
     __uint32_t W[64];
 
@@ -87,6 +90,10 @@ void sha256()
 
     // For loop to iterate through the message block 
     int t;
+    int o;
+
+    printf("Initalized variables... Entering loops\n");
+
 
     for(t=0; t<16; t++)
     {
@@ -137,6 +144,20 @@ void sha256()
         H[5] = f + H[5];
         H[6] = g + H[6];
         H[7] = h + H[7];
+        
+       
+        printf("%x", H[0]);
+        printf("%x", H[1]);
+        printf("%x", H[2]);
+        printf("%x", H[3]);
+        printf("%x", H[4]);
+        printf("%x", H[5]);
+        printf("%x", H[6]);
+        printf("%x", H[7]);
+        printf("%x", H[8]);
+        
+
+        printf("\n ==== COMPLETED ====\n");
 
     };
 
