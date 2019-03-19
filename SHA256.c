@@ -186,12 +186,13 @@ void sha256()
 
 // This function is used to handle the opening and reading of files
 
-void openFile(int argumentCount, char *fileName)
+char openFile(int argumentCount, char *fileName)
 {
     // Variables
     FILE *file;
     char fileContents[MAXCHAR];
-    int fileSize;
+    char fileContentsAsString[MAXCHAR];
+    long fileSize;
 
     // Open a file, specifiying which file using command line arguments
     file = fopen(fileName, "r");
@@ -202,10 +203,13 @@ void openFile(int argumentCount, char *fileName)
     }
     else
     {
-        fileSize = fsize(file);
-        printf("\n File Size: %d \n", fileSize);
+        // Calculate the size of the file
+        fileSize = calcFileSize(file);
+
+        printf("\n File Size (characters): %d \n", fileSize);
 
         printf("\n --- File Contents --- \n");
+
         // While there is still stuff to read from the file
         while(fgets(fileContents, MAXCHAR, file) != NULL)
         {
@@ -213,8 +217,9 @@ void openFile(int argumentCount, char *fileName)
             printf("%s", fileContents);
         };
 
-        // Close the file and return 0
+        // Close the file 
         fclose(file);
+        return fileContents;
     }
     
     
@@ -223,13 +228,13 @@ void openFile(int argumentCount, char *fileName)
 };
 
 // Simple function that calcuates the size of a file
-int fsize(FILE *fp)
+int calcFileSize(FILE *file)
 {
-    int prev=ftell(fp);
-    fseek(fp, 0L, SEEK_END);
-    int sz=ftell(fp);
-    fseek(fp,prev,SEEK_SET); 
-    return sz;
+    int prev=ftell(file);
+    fseek(file, 0L, SEEK_END);
+    int size=ftell(file);
+    fseek(file,prev,SEEK_SET); 
+    return size;
 }
 
 void padding()
