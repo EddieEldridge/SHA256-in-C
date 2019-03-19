@@ -36,11 +36,11 @@ int main(int argc, char *argv[])
         printf("Please supply a file to hash.");
         exit;
     }
-    else if(argc==1)
+    else if(argc>=1)
     {
+        printf("\n Correct arguments. Attemping to read file.. \n");
         int argumentCount = argc;
-        char fileName = *argv[1];
-        printf("Filename: %s", fileName);
+        char *fileName = argv[1];
         // Function calls
         //sha256();
         openFile(argumentCount, fileName);
@@ -186,32 +186,51 @@ void sha256()
 
 // This function is used to handle the opening and reading of files
 
-void openFile(int argumentCount, char fileName)
+void openFile(int argumentCount, char *fileName)
 {
     // Variables
     FILE *file;
     char fileContents[MAXCHAR];
+    int fileSize;
 
     // Open a file, specifiying which file using command line arguments
-    file = fopen(fileName, 'r');
+    file = fopen(fileName, "r");
 
     // First check to make sure the file could be found
-    //if (file == NULL){
-    //    printf("Could not open file %s",arguementString[1]);
-    //    return 1;
-    //}
-   
-    // While there is still stuff to read from the file
-   // while(fgets(fileContents, MAXCHAR, file) != NULL)
-    //{
-        // Print the contents of the file
-    //    printf("%s", fileContents);
-   // };
+    if (file == NULL){
+        printf("\n Could not open file %s\n", fileName);
+    }
+    else
+    {
+        fileSize = fsize(file);
+        printf("\n File Size: %d \n", fileSize);
 
-    // Close the file and return 0
-    //fclose(file);
-    //return 0;
+        printf("\n --- File Contents --- \n");
+        // While there is still stuff to read from the file
+        while(fgets(fileContents, MAXCHAR, file) != NULL)
+        {
+            // Print the contents of the file
+            printf("%s", fileContents);
+        };
+
+        // Close the file and return 0
+        fclose(file);
+    }
+    
+    
+    
+    
 };
+
+// Simple function that calcuates the size of a file
+int fsize(FILE *fp)
+{
+    int prev=ftell(fp);
+    fseek(fp, 0L, SEEK_END);
+    int sz=ftell(fp);
+    fseek(fp,prev,SEEK_SET); 
+    return sz;
+}
 
 void padding()
 {
