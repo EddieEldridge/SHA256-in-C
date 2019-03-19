@@ -29,7 +29,6 @@ int main(int argc, char *argv[])
 {
      // Print header
      printf("\n======== SHA256 - HASHING ALGORITHM ========\n\n");
-    
     // Test to make sure the user is inputting a filename
     if(argc==0)
     {
@@ -41,9 +40,12 @@ int main(int argc, char *argv[])
         printf("\n Correct arguments. Attemping to read file.. \n");
         int argumentCount = argc;
         char *fileName = argv[1];
+        char fileContents;
         // Function calls
         //sha256();
-        openFile(argumentCount, fileName);
+        fileContents = openFile(argumentCount, fileName);
+        printf("\n -- File Contents -- \n");
+        printf("%s", fileContents);
     }
     else
     {
@@ -214,16 +216,13 @@ char openFile(int argumentCount, char *fileName)
         while(fgets(fileContents, MAXCHAR, file) != NULL)
         {
             // Print the contents of the file
-            printf("%s", fileContents);
+            //printf("%s", fileContents);
         };
 
         // Close the file 
         fclose(file);
         return fileContents;
     }
-    
-    
-    
     
 };
 
