@@ -7,6 +7,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Tell our preprocessor to create a variable MAXCHAR with value of 100000
+#define MAXCHAR 100000
+
 // Function decleration
 // See Section 4.1.2
 __uint32_t sig0(__uint32_t x);
@@ -25,20 +28,38 @@ __uint32_t Maj(__uint32_t x,__uint32_t y,__uint32_t z);
 int main(int argc, char *argv[]) 
 {
      // Print header
-     printf("\n======== SHA256 - HASHING ALGORITHM ========\n");
-
-     // Function calls
-     sha256();
+     printf("\n======== SHA256 - HASHING ALGORITHM ========\n\n");
     
-     // Main return method
+    // Test to make sure the user is inputting a filename
+    if(argc==0)
+    {
+        printf("Please supply a file to hash.");
+        exit;
+    }
+    else if(argc==1)
+    {
+        int argumentCount = argc;
+        char fileName = *argv[1];
+        printf("Filename: %s", fileName);
+        // Function calls
+        //sha256();
+        openFile(argumentCount, fileName);
+    }
+    else
+    {
+        printf("Invalid arguments, please recheck your spelling.");
+        exit;
+    }
+    
      return 0;
+
 }
 
 // === Functions ===
 
 void sha256()
 {
-    printf("Starting SHA256 algorithm....\n");
+    printf("\n Starting SHA256 algorithm....\n");
 
     // Declare the K constant
     // Defined in Section 4.2.2
@@ -92,7 +113,7 @@ void sha256()
     int t;
     int o;
 
-    printf("Initalized variables... Entering loops\n");
+    printf("\n Initalized variables... Entering loops\n");
 
 
     for(t=0; t<16; t++)
@@ -145,7 +166,7 @@ void sha256()
         H[6] = g + H[6];
         H[7] = h + H[7];
         
-       
+     printf("\n====== HASH OUTPUT ======\n\n");
         printf("%x", H[0]);
         printf("%x", H[1]);
         printf("%x", H[2]);
@@ -157,10 +178,44 @@ void sha256()
         printf("%x", H[8]);
         
 
-        printf("\n ==== COMPLETED ====\n");
+     printf("\n\n======== HASH SUCCESSFUL ========\n\n");
 
     };
 
+};
+
+// This function is used to handle the opening and reading of files
+
+void openFile(int argumentCount, char fileName)
+{
+    // Variables
+    FILE *file;
+    char fileContents[MAXCHAR];
+
+    // Open a file, specifiying which file using command line arguments
+    file = fopen(fileName, 'r');
+
+    // First check to make sure the file could be found
+    //if (file == NULL){
+    //    printf("Could not open file %s",arguementString[1]);
+    //    return 1;
+    //}
+   
+    // While there is still stuff to read from the file
+   // while(fgets(fileContents, MAXCHAR, file) != NULL)
+    //{
+        // Print the contents of the file
+    //    printf("%s", fileContents);
+   // };
+
+    // Close the file and return 0
+    //fclose(file);
+    //return 0;
+};
+
+void padding()
+{
+    // 
 };
 
 // Section 4.1.2  
