@@ -7,6 +7,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Define a union for easy reference
+union messageBlock
+{
+    __uint8_t e[64];
+    __uint32_t t[16;
+    __uint64_t s[8];
+}
+
 // Tell our preprocessor to create a variable MAXCHAR with value of 100000
 #define MAXCHAR 100000
 
@@ -213,12 +221,20 @@ char openFile(int argumentCount, char *fileName)
         printf("\n --- File Contents --- \n");
 
         // While there is still stuff to read from the file
+        /*
         while(fgets(fileContents, MAXCHAR, file) != NULL)
         {
             // Print the contents of the file
             //printf("%s", fileContents);
         };
+        */
 
+        // Read bytes instead of characters
+        // Read until the end of the file
+        while(!feof(file))
+        {
+            numBytes=fread(M.e)
+        }
         // Close the file 
         fclose(file);
         return fileContents;
