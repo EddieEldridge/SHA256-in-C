@@ -34,6 +34,7 @@ __uint32_t Maj(__uint32_t x,__uint32_t y,__uint32_t z);
 
 char openFile();
 char readContents();
+int calcFileSize();
 
 // ==== Main ===
 int main(int argc, char *argv[]) 
@@ -52,9 +53,11 @@ int main(int argc, char *argv[])
         int argumentCount = argc;
         char *fileName = argv[1];
         char fileContents;
+        
         // Function calls
         //sha256();
-        fileContents = readContents(argumentCount, fileName);
+        //fileContents = readContents(argumentCount, fileName);
+        openFile(argumentCount, fileName);
     }
     else
     {
@@ -62,7 +65,7 @@ int main(int argc, char *argv[])
         exit;
     }
     
-     return 0;
+    return 0;
 
 }
 
@@ -196,7 +199,6 @@ void sha256()
 };
 
 // This function is used to handle the opening and reading of files
-
 char openFile(int argumentCount, char *fileName)
 {   
     // Variables
@@ -206,6 +208,7 @@ char openFile(int argumentCount, char *fileName)
     long fileSize;
     union messageBlock msgBlock;
     __uint64_t numBytes;
+    __uint64_t numBits = 0;
 
     // Open a file, specifiying which file using command line arguments
     file = fopen(fileName, "r");
@@ -237,15 +240,41 @@ char openFile(int argumentCount, char *fileName)
         while(!feof(file))
         {
             numBytes=fread(msgBlock.e, 1, 64, file);
+            numBits = numBits + (numBytes * 8);
+
+            // If theres enough room to finish the padding
+            if(numBytes<56)
+            {
+                printf("Block with less than 56 bytes\n");
+                msgBlock.e[numBytes] = 0x80;
+
+                while(numBytes<56)
+                {
+                    // Add the index into our block
+                    numBytes = numBytes +1;
+                    
+                    // Set the rest of the bytes to 0
+                    msgBlock.e[numBytes] = 0x00;
+                }
+                msgBlock.s[7] = numBits;
+            }
             printf("%llu\n", numBytes);
         }
         // Close the file 
         fclose(file);
+
+        printf("\n--- PADDING --- \n");
+        for (int i=0; i<64; i++)
+        {
+            printf("%x", msgBlock.e[i]);
+        }
+        printf("\n");
         return numBytes;
     }
     
 };
 
+// This function is used to read the contents of the file and return them as an array of chars
 char readContents(int argumentCount, char *fileName)
 {
     // Variables
@@ -280,7 +309,7 @@ char readContents(int argumentCount, char *fileName)
 
         // Close the file 
         fclose(file);
-        return fileContents;
+        return *fileContents;
     }
     
 }
