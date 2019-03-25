@@ -15,6 +15,13 @@ union messageBlock
     __uint64_t s[8];
 };
 
+// ENUM to control state of the program
+enum status{READ=0, 
+            PAD0=0,
+            PAD1=0,
+            FINISH=0
+            };
+
 // Tell our preprocessor to create a variable MAXCHAR with value of 100000
 #define MAXCHAR 100000
 
@@ -35,6 +42,7 @@ __uint32_t Maj(__uint32_t x,__uint32_t y,__uint32_t z);
 char openFile();
 char readContents();
 int calcFileSize();
+int endianCheck();
 
 // ==== Main ===
 int main(int argc, char *argv[]) 
@@ -44,7 +52,7 @@ int main(int argc, char *argv[])
     // Test to make sure the user is inputting a filename
     if(argc==0)
     {
-        printf("Please supply a file to hash.");
+        printf("Please supply a file to hash as command line arguments.");
         exit;
     }
     else if(argc>=1)
@@ -57,6 +65,7 @@ int main(int argc, char *argv[])
         // Function calls
         //sha256();
         //fileContents = readContents(argumentCount, fileName);
+        endianCheck();
         openFile(argumentCount, fileName);
     }
     else
@@ -209,6 +218,8 @@ char openFile(int argumentCount, char *fileName)
     union messageBlock msgBlock;
     __uint64_t numBytes;
     __uint64_t numBits = 0;
+    enum status state = READ;
+    int i;
 
     // Open a file, specifiying which file using command line arguments
     file = fopen(fileName, "r");
@@ -226,18 +237,10 @@ char openFile(int argumentCount, char *fileName)
 
         printf("\n --- File Contents --- \n");
 
-        // While there is still stuff to read from the file
-        /*
-        while(fgets(fileContents, MAXCHAR, file) != NULL)
-        {
-            // Print the contents of the file
-            //printf("%s", fileContents);
-        };
-        */
 
         // Read bytes instead of characters
         // Read until the end of the file
-        while(!feof(file))
+        while(state == READ)
         {
             numBytes=fread(msgBlock.e, 1, 64, file);
             numBits = numBits + (numBytes * 8);
@@ -246,24 +249,64 @@ char openFile(int argumentCount, char *fileName)
             if(numBytes<56)
             {
                 printf("Block with less than 56 bytes\n");
+
+                // 0x80 = 10000000
                 msgBlock.e[numBytes] = 0x80;
 
-                while(numBytes<56)
+                while(numBytes < 56)
                 {
                     // Add the index into our block
                     numBytes = numBytes +1;
                     
-                    // Set the rest of the bytes to 0
+                    // Add enough zeroes so that there are 64 bits left at the end
                     msgBlock.e[numBytes] = 0x00;
                 }
+
+                // Store the length of the file
                 msgBlock.s[7] = numBits;
+
+                // Change the state of our program
+                state = FINISH;
+            }
+            else if(numBytes < 64)
+            {
+                state = PAD0;
+                
+                 // 0x80 = 10000000
+                msgBlock.e[numBytes] = 0x80;
+
+                while(numBytes < 64)
+                {
+                    numBytes = numBytes + 1;
+                    msgBlock.e[numBytes] = 0x00;
+                }
+            }
+            else if(feof(file))
+            {
+                state = PAD1;
             }
             printf("%llu\n", numBytes);
         }
-        
+
+        // Handle our PAD0 and PAD1 states
+        if(state == PAD0 || state == PAD1)
+        {
+            for(i=0; i<56; i++)
+            {
+                msgBlock.e[numBytes] = 0x00;
+            }
+            msgBlock.s[7] = numBits;
+        }
+        if(state == PAD1)
+        {
+            // 0x80 = 10000000
+            msgBlock.e[0] = 0x80;
+        }
+
         // Close the file 
         fclose(file);
 
+        // Our padding
         printf("\n--- PADDING --- \n");
         for (int i=0; i<64; i++)
         {
@@ -324,6 +367,15 @@ int calcFileSize(FILE *file)
     return size;
 }
 
+int endianCheck()
+{
+    int num = 1;
+        if(*(char *)&num == 1) {
+                printf("\nYour system is Little-Endian!\n");
+        } else {
+                printf("Your system is Big-Endian!\n");
+        }
+}
 void padding()
 {
     // 
