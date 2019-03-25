@@ -260,6 +260,7 @@ char openFile(int argumentCount, char *fileName)
             }
             printf("%llu\n", numBytes);
         }
+        
         // Close the file 
         fclose(file);
 
