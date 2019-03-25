@@ -16,10 +16,10 @@ union messageBlock
 };
 
 // ENUM to control state of the program
-enum status{READ=0, 
-            PAD0=0,
-            PAD1=0,
-            FINISH=0
+enum status{READ, 
+            PAD0,
+            PAD1,
+            FINISH
             };
 
 // Tell our preprocessor to create a variable MAXCHAR with value of 100000
@@ -242,11 +242,11 @@ char openFile(int argumentCount, char *fileName)
         // Read until the end of the file
         while(state == READ)
         {
-            numBytes=fread(msgBlock.e, 1, 64, file);
+            numBytes = fread(msgBlock.e, 1, 64, file);
             numBits = numBits + (numBytes * 8);
 
             // If theres enough room to finish the padding
-            if(numBytes<56)
+            if(numBytes < 56)
             {
                 printf("Block with less than 56 bytes\n");
 
@@ -376,10 +376,6 @@ int endianCheck()
                 printf("Your system is Big-Endian!\n");
         }
 }
-void padding()
-{
-    // 
-};
 
 // Section 4.1.2  
 // ROTR = Rotate Right 
