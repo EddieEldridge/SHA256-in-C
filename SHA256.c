@@ -11,9 +11,9 @@
 union messageBlock
 {
     __uint8_t e[64];
-    __uint32_t t[16;
+    __uint32_t t[16];
     __uint64_t s[8];
-}
+};
 
 // Tell our preprocessor to create a variable MAXCHAR with value of 100000
 #define MAXCHAR 100000
@@ -31,6 +31,9 @@ __uint32_t SIG1(__uint32_t x);
 
 __uint32_t Ch(__uint32_t x,__uint32_t y,__uint32_t z);
 __uint32_t Maj(__uint32_t x,__uint32_t y,__uint32_t z);
+
+char openFile();
+char readContents();
 
 // ==== Main ===
 int main(int argc, char *argv[]) 
@@ -51,9 +54,7 @@ int main(int argc, char *argv[])
         char fileContents;
         // Function calls
         //sha256();
-        fileContents = openFile(argumentCount, fileName);
-        printf("\n -- File Contents -- \n");
-        printf("%s", fileContents);
+        fileContents = readContents(argumentCount, fileName);
     }
     else
     {
@@ -197,12 +198,14 @@ void sha256()
 // This function is used to handle the opening and reading of files
 
 char openFile(int argumentCount, char *fileName)
-{
+{   
     // Variables
     FILE *file;
     char fileContents[MAXCHAR];
     char fileContentsAsString[MAXCHAR];
     long fileSize;
+    union messageBlock msgBlock;
+    __uint64_t numBytes;
 
     // Open a file, specifiying which file using command line arguments
     file = fopen(fileName, "r");
@@ -233,15 +236,54 @@ char openFile(int argumentCount, char *fileName)
         // Read until the end of the file
         while(!feof(file))
         {
-            numBytes=fread(M.e)
+            numBytes=fread(msgBlock.e, 1, 64, file);
+            printf("%llu\n", numBytes);
         }
+        // Close the file 
+        fclose(file);
+        return numBytes;
+    }
+    
+};
+
+char readContents(int argumentCount, char *fileName)
+{
+    // Variables
+    FILE *file;
+    char fileContents[MAXCHAR];
+    char fileContentsAsString[MAXCHAR];
+    long fileSize;
+
+    // Open a file, specifiying which file using command line arguments
+    file = fopen(fileName, "r");
+
+    // First check to make sure the file could be found
+    if (file == NULL){
+        printf("\n Could not open file %s\n", fileName);
+    }
+    else
+    {
+        // Calculate the size of the file
+        fileSize = calcFileSize(file);
+
+        printf("\n File Size (characters): %d \n", fileSize);
+
+        printf("\n --- File Contents --- \n");
+
+        // While there is still stuff to read from the file
+        while(fgets(fileContents, MAXCHAR, file) != NULL)
+        {
+            // Print the contents of the file
+            printf("%s", fileContents);
+        };
+        
+
         // Close the file 
         fclose(file);
         return fileContents;
     }
     
-};
-
+}
 // Simple function that calcuates the size of a file
 int calcFileSize(FILE *file)
 {
