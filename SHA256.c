@@ -8,6 +8,7 @@
 #include <string.h>
 
 // Define a union for easy reference
+// Union represents a message block
 union messageBlock
 {
     __uint8_t e[64];
@@ -39,16 +40,25 @@ __uint32_t SIG1(__uint32_t x);
 __uint32_t Ch(__uint32_t x,__uint32_t y,__uint32_t z);
 __uint32_t Maj(__uint32_t x,__uint32_t y,__uint32_t z);
 
-char openFile();
-char readContents();
+char fillMessageBlock();
+char readContentsAsChar();
 int calcFileSize();
 int endianCheck();
+void sha256();
+int nextMessageBlock(File *f, union messageBlock *M, enum status *state, int *numBits);
 
 // ==== Main ===
 int main(int argc, char *argv[]) 
-{
+{   
+     // Variables
+    FILE *file;
+    char fileContents[MAXCHAR];
+    char fileContentsAsString[MAXCHAR];
+    long fileSize;
+
      // Print header
      printf("\n======== SHA256 - HASHING ALGORITHM ========\n\n");
+
     // Test to make sure the user is inputting a filename
     if(argc==0)
     {
@@ -62,11 +72,27 @@ int main(int argc, char *argv[])
         char *fileName = argv[1];
         char fileContents;
         
-        // Function calls
-        //sha256();
-        //fileContents = readContents(argumentCount, fileName);
-        endianCheck();
-        openFile(argumentCount, fileName);
+         // First check to make sure the file could be found
+        if (file == NULL){
+            printf("\n Could not open file %s\n", fileName);
+        }
+        else
+        {
+            // Open a file, specifiying which file using command line arguments
+            file = fopen(fileName, "r");
+
+            // Calculate the size of the file
+            fileSize = calcFileSize(file);
+
+            printf("\n File Size (characters): %d \n", fileSize);
+
+            printf("\n --- File Contents --- \n");
+
+            // Function calls
+            //fileContents = readContents(argumentCount, fileName);
+            endianCheck();
+            fillMessageBlock(file);
+        }
     }
     else
     {
@@ -208,35 +234,14 @@ void sha256()
 };
 
 // This function is used to handle the opening and reading of files
-char openFile(int argumentCount, char *fileName)
+int fillMessageBlock(File f*, union messageBlock *msgBlock, enum status *state, int *numBits)
 {   
     // Variables
-    FILE *file;
-    char fileContents[MAXCHAR];
-    char fileContentsAsString[MAXCHAR];
-    long fileSize;
     union messageBlock msgBlock;
     __uint64_t numBytes;
     __uint64_t numBits = 0;
     enum status state = READ;
     int i;
-
-    // Open a file, specifiying which file using command line arguments
-    file = fopen(fileName, "r");
-
-    // First check to make sure the file could be found
-    if (file == NULL){
-        printf("\n Could not open file %s\n", fileName);
-    }
-    else
-    {
-        // Calculate the size of the file
-        fileSize = calcFileSize(file);
-
-        printf("\n File Size (characters): %d \n", fileSize);
-
-        printf("\n --- File Contents --- \n");
-
 
         // Read bytes instead of characters
         // Read until the end of the file
@@ -319,7 +324,7 @@ char openFile(int argumentCount, char *fileName)
 };
 
 // This function is used to read the contents of the file and return them as an array of chars
-char readContents(int argumentCount, char *fileName)
+char readContentsAsChar(int argumentCount, char *fileName)
 {
     // Variables
     FILE *file;
