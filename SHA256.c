@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
     int argumentCount = argc;
 
     // Print header
-    printf("\n======== SHA256 - HASHING ALGORITHM ========\n\n");
+    printf("\n======== SHA256 - HASHING ALGORITHM ========");
 
     // Test to make sure the user is inputting a filename
     if(argumentCount == 0)
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
             // Function calls
             printf("\n File ok, executing functions.. \n");
             endianCheck();
-            //printFileContents(file);
+            printFileContents(file);
             calculateHash(file);
 
             // Close the file 
@@ -225,8 +225,8 @@ void calculateHash(FILE *file)
     }// end while
     
     // Print the results
-    printf("\n====== HASH OUTPUT ======\n\n");
-    printf("%x", H[0]);
+    printf("\n=================== HASH OUTPUT ==================================\n\n");
+    printf(" %x", H[0]);
     printf("%x", H[1]);
     printf("%x", H[2]);
     printf("%x", H[3]);
@@ -234,8 +234,9 @@ void calculateHash(FILE *file)
     printf("%x", H[5]);
     printf("%x", H[6]);
     printf("%x", H[7]);
-        
-    printf("\n\n======== HASH SUCCESSFUL ========\n\n");
+    
+    printf("\n\n==================================================================\n\n");
+
 }
 
 // This function is used to handle the opening and reading of files
@@ -281,21 +282,16 @@ int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *stat
         }
     }
 
-    printf("\n Bytes before read: %" PRId64 "\n", numBytes);
     // Read bytes instead of characters
     // Read until the end of the file
     numBytes = fread(msgBlock->e, 1, 64, file);
     
     // Keep track of the number of bytes we've read
     *numBits = *numBits + (numBytes * 8);
-
-    printf("\n Bytes after read: %" PRId64 "\n", numBytes);
     
     // If theres enough room to finish the padding
     if(numBytes < 56)
     {
-        printf("Block with less than 56 bytes\n");
-
         // 0x80 = 10000000
         // Add the one bit, as per the standard before padding with 0s
         msgBlock->e[numBytes] = 0x80;
@@ -319,8 +315,6 @@ int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *stat
     // Otherwise, check if we can put some padding into this message block
     else if(numBytes < 64)
     {   
-        printf("Block with less than 64 bytes\n");
-
         // Set the state to PAD0
         *state = PAD0;
         
@@ -338,7 +332,6 @@ int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *stat
     // Otherwise if we're at the end of the file, need to create a new message block full of padding
     else if(feof(file))
     {
-        printf("End of file");
         // Set the state to PAD1
         // We need a message Block full of padding
         *state = PAD1;
@@ -375,17 +368,18 @@ void printFileContents(FILE *file)
 
         printf("\n File Size (characters): %d \n", fileSize);
 
-        printf("\n --- File Contents --- \n");
+        printf("\n ============= File Contents ============= \n");
 
         // While there is still stuff to read from the file
         while(fgets(fileContents, MAXCHAR, file) != NULL)
         {
             // Print the contents of the file
-            printf("%s", fileContents);
+            printf(" %s\n", fileContents);
         };
         
+        printf("\n ========================================= \n");
+
         // Close the file 
-        fclose(file);
         return;
     }
     

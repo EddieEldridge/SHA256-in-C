@@ -1,0 +1,7 @@
+The following file contains the right hashes for the following files
+
+Test File 1: 181c8b1465a16f2d8d37a51092892182c9b8f049fad499fcf41520379dab22ca
+Test File 2: bc9c7f1c1ad80e90c59b19f7d3881efd025223ded616d2926e47ac83bb930c6a
+Test File 3: 8841b9ea07e08a3dad0dc6f02e09d1d8dfc79b1ae04d4007332b45e641b15f11
+
+Hashes generated using https://www.movable-type.co.uk/scripts/sha256.html

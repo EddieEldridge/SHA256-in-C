@@ -1,0 +1,4 @@
+This is test 3 of the SHA256 hashing algorithm
+1234567890
+sdfsdhbvcd
+ffgsdfeerg
