@@ -45,47 +45,48 @@ int calcFileSize();
 int endianCheck();
 int fillMessageBlock();
 void calculateHash();
-int nextMessageBlock(FILE *f, union messageBlock *M, enum status *state, int *numBits);
+int nextMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *state, int *numBits);
 
 // ==== Main ===
 int main(int argc, char *argv[]) 
 {   
      // Variables
     FILE *file;
-    char fileContents[MAXCHAR];
-    char fileContentsAsString[MAXCHAR];
-    long fileSize;
+    char* fileName;
+    int argumentCount = argc;
 
-     // Print header
-     printf("\n======== SHA256 - HASHING ALGORITHM ========\n\n");
+    // Print header
+    printf("\n======== SHA256 - HASHING ALGORITHM ========\n\n");
 
     // Test to make sure the user is inputting a filename
-    if(argc==0)
+    if(argumentCount == 0)
     {
         printf("Please supply a file to hash as command line arguments.");
         exit;
     }
-    else if(argc>=1)
+    else if(argumentCount >= 1)
     {
         printf("\n Correct arguments. Attemping to read file.. \n");
-        int argumentCount = argc;
-        char *fileName = argv[1];
-        char fileContents;
-        
+
+        fileName = argv[1];
+            
+        // Open a file, specifiying which file using command line arguments
+        file = fopen(fileName, "r");
+
          // First check to make sure the file could be found
         if (file == NULL){
             printf("\n Could not open file %s\n", fileName);
         }
         else
         {
-            // Open a file, specifiying which file using command line arguments
-            file = fopen(fileName, "r");
-
             // Function calls
+            printf("\n File ok, executing functions.. \n");
             endianCheck();
             printFileContents(file);
-            //fillMessageBlock(file);
-            //calculateHash();
+            calculateHash(file);
+
+            // Close the file 
+            fclose(file);
         }
     }
     else
@@ -99,10 +100,9 @@ int main(int argc, char *argv[])
 }
 
 // === Functions ===
-void sha256(FILE f*)
+void calculateHash(FILE *file)
 {   
     // Variables
-
     // The current message block
     union messageBlock msgBlock;
 
@@ -219,7 +219,7 @@ void sha256(FILE f*)
                 H[6] = g + H[6];
                 H[7] = h + H[7];
                 
-            printf("\n====== HASH OUTPUT ======\n\n");
+                printf("\n====== HASH OUTPUT ======\n\n");
                 printf("%x", H[0]);
                 printf("%x", H[1]);
                 printf("%x", H[2]);
@@ -229,9 +229,9 @@ void sha256(FILE f*)
                 printf("%x", H[6]);
                 printf("%x", H[7]);
                 printf("%x", H[8]);
-                
+                    
 
-            printf("\n\n======== HASH SUCCESSFUL ========\n\n");
+                printf("\n\n======== HASH SUCCESSFUL ========\n\n");
 
             }
     }
@@ -269,10 +269,10 @@ int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *stat
         *state = FINISH;
 
         // If state is PAD1, set the first bit of msgBlock to 1
-        if(state == PAD1)
+        if(*state == PAD1)
         {
             // 0x80 = 10000000
-            msgBlock.e[0] = 0x80;
+            msgBlock->e[0] = 0x80;
 
             // keep the loop in SHA256 going for one more iteration
             return 1;
@@ -308,7 +308,7 @@ int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *stat
         }
 
         // Store the length of the file in bits as a (Should be big endian) unsigned 64 bit int
-        msgBlock.s[7] = numBits;
+        msgBlock->s[7] = numBits;
 
         // Change the state of our program
         *state = FINISH;
@@ -327,31 +327,30 @@ int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *stat
         while(numBytes < 64)
         {
             numBytes = numBytes + 1;
-            msgBlock.e[numBytes] = 0x00;
+            msgBlock->e[numBytes] = 0x00;
         }
     }
-    // Otherwise if we're at the end of the file
+    // Otherwise if we're at the end of the file, need to create a new message block full of padding
     else if(feof(file))
     {
+        // Set the state to PAD1
+        // We need a message Block full of padding
         *state = PAD1;
     }
-    printf("%llu\n", numBytes);
     
-
-    // Close the file 
-    fclose(file);
-
-    // Our padding
+    // Print padding
+    /*
     printf("\n--- PADDING --- \n");
     for (int i=0; i<64; i++)
     {
-        printf("%x", msgBlock.e[i]);
+       printf("%x", msgBlock.e[i]);
     }
     printf("\n");
-    return 0;
+    */
+    return 1;
 }
     
-}
+
 
 // This function is used to read the contents of the file and return them as an array of chars
 void printFileContents(FILE *file)
@@ -401,7 +400,7 @@ int endianCheck()
 {
     int num = 1;
         if(*(char *)&num == 1) {
-                printf("\nYour system is Little-Endian!\n");
+                printf("\n Your system is Little-Endian!\n");
         } else {
                 printf("Your system is Big-Endian!\n");
         }
