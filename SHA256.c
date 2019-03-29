@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
 
 // Define a union for easy reference
 // Union represents a message block
@@ -44,7 +45,7 @@ void printFileContents();
 int calcFileSize();
 int endianCheck();
 int fillMessageBlock();
-void calculateHash();
+void calculateHash(FILE *file);
 int nextMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *state, __uint64_t *numBits);
 
 // ==== Main ===
@@ -82,7 +83,7 @@ int main(int argc, char *argv[])
             // Function calls
             printf("\n File ok, executing functions.. \n");
             endianCheck();
-            printFileContents(file);
+            //printFileContents(file);
             calculateHash(file);
 
             // Close the file 
@@ -182,7 +183,7 @@ void calculateHash(FILE *file)
         }
 
 
-         // Initalize a..h
+        // Initalize a..h
         // Step 2
         a=H[0];
         b=H[1];
@@ -263,8 +264,6 @@ int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *stat
             msgBlock->e[i] = 0x00;
         }
 
-        printf("\n %x", numBytes);
-
         // Set the last 64 bits to an integer (should be big endian)
         msgBlock->s[7] = *numBits;
 
@@ -275,13 +274,14 @@ int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *stat
         if(*state == PAD1)
         {
             // 0x80 = 10000000
-            msgBlock->e[0] = 0x80;
+            msgBlock->e[0] = 0x01;
 
             // keep the loop in SHA256 going for one more iteration
             return 1;
         }
     }
 
+    printf("\n Bytes before read: %" PRId64 "\n", numBytes);
     // Read bytes instead of characters
     // Read until the end of the file
     numBytes = fread(msgBlock->e, 1, 64, file);
@@ -289,7 +289,8 @@ int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *stat
     // Keep track of the number of bytes we've read
     *numBits = *numBits + (numBytes * 8);
 
-    printf("\n %x", numBytes);
+    printf("\n Bytes after read: %" PRId64 "\n", numBytes);
+    
     // If theres enough room to finish the padding
     if(numBytes < 56)
     {
@@ -337,7 +338,7 @@ int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *stat
     // Otherwise if we're at the end of the file, need to create a new message block full of padding
     else if(feof(file))
     {
-        printf("Here");
+        printf("End of file");
         // Set the state to PAD1
         // We need a message Block full of padding
         *state = PAD1;
