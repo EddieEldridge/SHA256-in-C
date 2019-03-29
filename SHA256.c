@@ -45,7 +45,7 @@ int calcFileSize();
 int endianCheck();
 int fillMessageBlock();
 void calculateHash();
-int nextMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *state, int *numBits);
+int nextMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *state, __uint64_t *numBits);
 
 // ==== Main ===
 int main(int argc, char *argv[]) 
@@ -167,80 +167,78 @@ void calculateHash(FILE *file)
 
     printf("\n Initalized variables... Entering loops\n");
 
-    while(fillMessageBlock(file, msgBlock, state, numBits))
+    while(fillMessageBlock(file, &msgBlock, &state, &numBits))
     {
-            for(j=0; j<16; j++)
-            {
-                // Add the current message block to our messag schedule
-                W[j] = msgBlock.t[j];
-            }
+        for(j=0; j<16; j++)
+        {
+            // Add the current message block to our messag schedule
+            W[j] = msgBlock.t[j];
+        }
 
-            for (j=16; j<64; j++)
-            {
-                // Step 1
-                sig1(W[j-2]) + W[j-7] + sig0(W[j-15]) + W[j-16];
+        for (j=16; j<64; j++)
+        {
+            // Step 1
+            W[j] = sig1(W[j-2]) + W[j-7] + sig0(W[j-15]) + W[j-16];
+        }
 
-                // Initalize a..h
-                // Step 2
-                a=H[0];
-                b=H[1];
-                c=H[2];
-                d=H[3];
-                e=H[4];
-                f=H[5];
-                g=H[6];
-                h=H[7];
 
-                // For loop
-                // Step 3
-                for(j = 0; j < 64; j++)
-                {
-                    // Creating new variables
-                    // Need to write 'K', 
-                    T1 = h + SIG1(e) + Ch(e,f,g) + K[j] + W[j];
-                    T2 = SIG0(a) + Maj(a,b,c);
-                    h = g;
-                    g = f;
-                    f = e;
-                    e = d + T1;
-                    d = c;
-                    c = b;
-                    b = a;
-                    a = T1 + T2;
-                };
+         // Initalize a..h
+        // Step 2
+        a=H[0];
+        b=H[1];
+        c=H[2];
+        d=H[3];
+        e=H[4];
+        f=H[5];
+        g=H[6];
+        h=H[7];
 
-                // Step 4
-                H[0] = a + H[0];
-                H[1] = b + H[1];
-                H[2] = c + H[2];
-                H[3] = d + H[3];
-                H[4] = e + H[4];
-                H[5] = f + H[5];
-                H[6] = g + H[6];
-                H[7] = h + H[7];
-                
-                printf("\n====== HASH OUTPUT ======\n\n");
-                printf("%x", H[0]);
-                printf("%x", H[1]);
-                printf("%x", H[2]);
-                printf("%x", H[3]);
-                printf("%x", H[4]);
-                printf("%x", H[5]);
-                printf("%x", H[6]);
-                printf("%x", H[7]);
-                printf("%x", H[8]);
-                    
+        // For loop
+        // Step 3
+        for(j = 0; j < 64; j++)
+        {
+            // Creating new variables
+            // Need to write 'K', 
+            T1 = h + SIG1(e) + Ch(e,f,g) + K[j] + W[j];
+            T2 = SIG0(a) + Maj(a,b,c);
+            h = g;
+            g = f;
+            f = e;
+            e = d + T1;
+            d = c;
+            c = b;
+            b = a;
+            a = T1 + T2;
+        }
 
-                printf("\n\n======== HASH SUCCESSFUL ========\n\n");
-
-            }
-    }
+        // Step 4
+        H[0] = a + H[0];
+        H[1] = b + H[1];
+        H[2] = c + H[2];
+        H[3] = d + H[3];
+        H[4] = e + H[4];
+        H[5] = f + H[5];
+        H[6] = g + H[6];
+        H[7] = h + H[7];
     
-
+    }// end while
+    
+    // Print the results
+    printf("\n====== HASH OUTPUT ======\n\n");
+    printf("%x", H[0]);
+    printf("%x", H[1]);
+    printf("%x", H[2]);
+    printf("%x", H[3]);
+    printf("%x", H[4]);
+    printf("%x", H[5]);
+    printf("%x", H[6]);
+    printf("%x", H[7]);
+        
+    printf("\n\n======== HASH SUCCESSFUL ========\n\n");
 }
 
 // This function is used to handle the opening and reading of files
-int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *state, int *numBits)
+int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *state, __uint64_t *numBits)
 {   
     // Variables
     __uint64_t numBytes;
@@ -249,6 +247,7 @@ int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *stat
     // If we've finished padding and processing all the message blocks, exit
     if(*state == FINISH)
     {
+        printf("\n State = FINISH.\n");
         return 0;
     }
 
@@ -256,11 +255,15 @@ int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *stat
     // Check if we need another block full of padding
     if(*state == PAD0 || *state == PAD1)
     {
+        printf("\n State = PAD0 or PAD1.\n");
+
         // Set the first 56 bytes to all zero bits
         for(i=0; i<56; i++)
         {
             msgBlock->e[i] = 0x00;
         }
+
+        printf("\n %x", numBytes);
 
         // Set the last 64 bits to an integer (should be big endian)
         msgBlock->s[7] = *numBits;
@@ -279,8 +282,6 @@ int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *stat
         }
     }
 
-    // If we make it this far, we haven't finished reading the file
-    
     // Read bytes instead of characters
     // Read until the end of the file
     numBytes = fread(msgBlock->e, 1, 64, file);
@@ -288,6 +289,7 @@ int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *stat
     // Keep track of the number of bytes we've read
     *numBits = *numBits + (numBytes * 8);
 
+    printf("\n %x", numBytes);
     // If theres enough room to finish the padding
     if(numBytes < 56)
     {
@@ -308,7 +310,7 @@ int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *stat
         }
 
         // Store the length of the file in bits as a (Should be big endian) unsigned 64 bit int
-        msgBlock->s[7] = numBits;
+        msgBlock->s[7] = *numBits;
 
         // Change the state of our program
         *state = FINISH;
@@ -316,6 +318,8 @@ int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *stat
     // Otherwise, check if we can put some padding into this message block
     else if(numBytes < 64)
     {   
+        printf("Block with less than 64 bytes\n");
+
         // Set the state to PAD0
         *state = PAD0;
         
@@ -333,6 +337,7 @@ int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *stat
     // Otherwise if we're at the end of the file, need to create a new message block full of padding
     else if(feof(file))
     {
+        printf("Here");
         // Set the state to PAD1
         // We need a message Block full of padding
         *state = PAD1;
@@ -350,8 +355,6 @@ int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *stat
     return 1;
 }
     
-
-
 // This function is used to read the contents of the file and return them as an array of chars
 void printFileContents(FILE *file)
 {

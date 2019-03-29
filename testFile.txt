@@ -1,6 +1,1 @@
 Hello my name is Eddie
-Hello my name is John
-Hello my name is Bob
-Hello my name is Steven
-Hello my name is Robert
-Hello my name is Christopher
