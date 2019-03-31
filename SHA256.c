@@ -431,7 +431,9 @@ _Bool endianCheck()
 // Converts a little endian integer to big endian and vice versa (32 bit version)
 __uint32_t byteSwap32(__uint32_t x)
 {
-    return (((x>>24) & 0x000000ff) | ((x>>8) & 0x0000ff00) | ((x<<8) & 0x00ff0000) | ((x<<24) & 0xff000000));
+    x = (x & 0xffff0000) >> 16 | (x & 0x0000ffff) << 16;
+    x = (x & 0xff00ff00) >>  8 | (x & 0x00ff00ff) <<  8;
+    return x;
 }
 
 
@@ -454,14 +456,12 @@ __uint64_t byteSwap64(__uint64_t integer)
 __uint32_t sig0(__uint32_t x)
 {
     // Section 3.2
-   
-    return (rotr(x,7) ^ rotr(x, 18) ^ ((x) >> 3));
-
+    return rotr(x, 7) ^ rotr(x, 18) ^ shr(x, 3);
 };
 
 __uint32_t sig1(__uint32_t x)
 {
-    return (rotr(x,17) ^ rotr(x,19) ^ ((x) >> 10));
+    return rotr(x, 17) ^ rotr(x, 19) ^ shr(x, 10);
 };
 
 // Rotate bits right
@@ -489,11 +489,11 @@ __uint32_t SIG1(__uint32_t x)
 // Choose
 __uint32_t Ch(__uint32_t x,__uint32_t y,__uint32_t z)
 {
-    return ((x & y) ^ (~(x) & z));
+    return ((x & y) ^ ((~x) & z));
 };
 
 // Majority decision
 __uint32_t Maj(__uint32_t x,__uint32_t y,__uint32_t z)
 {
-    return ((x & y) ^ (x & z) ^ (y & z));
+    return (x & y) ^ (x & z) ^ (y & z);
 };
