@@ -63,6 +63,7 @@ int main(int argc, char *argv[])
 {   
      // Variables
     FILE *file;
+    FILE *fileForPrinting;
     char* fileName;
     int argumentCount = argc;
 
@@ -82,6 +83,7 @@ int main(int argc, char *argv[])
         fileName = argv[1];
             
         // Open a file, specifiying which file using command line arguments
+        fileForPrinting = fopen(fileName, "r");
         file = fopen(fileName, "r");
 
          // First check to make sure the file could be found
@@ -92,12 +94,12 @@ int main(int argc, char *argv[])
         {
             // Function calls
             printf("\n File ok, executing functions.. \n");
-            //endianCheckPrint();
-            //printFileContents(file);
+            endianCheckPrint();
+            printFileContents(fileForPrinting);
+
+             // Open a file, specifiying which file using command line arguments
             calculateHash(file);
 
-            // Close the file 
-            fclose(file);
         }
     }
     else
@@ -257,6 +259,7 @@ void calculateHash(FILE *file)
     
     printf("\n\n==================================================================\n\n");
 
+    fclose(file);
 }
 
 // This function is used to handle the opening and reading of files
@@ -370,7 +373,7 @@ int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *stat
 }
     
 // This function is used to read the contents of the file and return them as an array of chars
-void printFileContents(FILE *file)
+void printFileContents(FILE *fileForPrinting)
 {
     // Variables
     char fileContents[MAXCHAR];
@@ -378,26 +381,28 @@ void printFileContents(FILE *file)
     long fileSize;
 
     // First check to make sure the file could be found
-    if (file == NULL){
+    if (fileForPrinting == NULL){
         printf("\n Could not open file");
     }
     else
     {
         // Calculate the size of the file
-        fileSize = calcFileSize(file);
+        fileSize = calcFileSize(fileForPrinting);
 
         printf("\n File Size (characters): %d \n", fileSize);
 
         printf("\n ============= File Contents ============= \n");
 
         // While there is still stuff to read from the file
-        while(fgets(fileContents, MAXCHAR, file) != NULL)
+        while(fgets(fileContents, MAXCHAR, fileForPrinting) != NULL)
         {
             // Print the contents of the file
             printf(" %s\n", fileContents);
         };
         
         printf("\n ========================================= \n");
+
+        fclose(fileForPrinting);
 
         // Close the file 
         return;
