@@ -1,4 +1,0 @@
-This is test 2 of the SHA256 hashing algorithm
-asdasdasda
-s2dasaxsaz
-hhtedfgwrt

@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
+#include <stdbool.h>
 
 // Define a union for easy reference
 // Union represents a message block
@@ -43,7 +44,8 @@ __uint32_t Maj(__uint32_t x,__uint32_t y,__uint32_t z);
 
 void printFileContents();
 int calcFileSize();
-int endianCheck();
+void endianCheckPrint();
+_Bool endianCheck();
 int fillMessageBlock();
 void calculateHash(FILE *file);
 int nextMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *state, __uint64_t *numBits);
@@ -84,8 +86,8 @@ int main(int argc, char *argv[])
         {
             // Function calls
             printf("\n File ok, executing functions.. \n");
-            endianCheck();
-            printFileContents(file);
+            endianCheckPrint();
+            //printFileContents(file);
             calculateHash(file);
 
             // Close the file 
@@ -173,10 +175,20 @@ void calculateHash(FILE *file)
     while(fillMessageBlock(file, &msgBlock, &state, &numBits))
     {
         for(j=0; j<16; j++)
-        {
-            // Add the current message block to our messag schedule
-            // Convert to big endian first
-            W[j] = byteSwap32(msgBlock.t[j]);
+        {   
+            // Fist check for big or little endian
+            // If our system is big endian we dont need to do any conversion
+            if(endianCheck()==true)
+            {
+                W[j] = msgBlock.t[j];
+            }
+            else
+            {
+                // Add the current message block to our messag schedule
+                // Convert to big endian first
+                W[j] = byteSwap32(msgBlock.t[j]);
+            }
+           
         }
 
         for (j=16; j<64; j++)
@@ -202,7 +214,6 @@ void calculateHash(FILE *file)
         for(j = 0; j < 64; j++)
         {
             // Creating new variables
-            // Need to write 'K', 
             T1 = h + SIG1(e) + Ch(e,f,g) + K[j] + W[j];
             T2 = SIG0(a) + Maj(a,b,c);
             h = g;
@@ -229,14 +240,14 @@ void calculateHash(FILE *file)
     
     // Print the results
     printf("\n=================== HASH OUTPUT ==================================\n\n");
-    printf(" %x", H[0]);
-    printf("%x", H[1]);
-    printf("%x", H[2]);
-    printf("%x", H[3]);
-    printf("%x", H[4]);
-    printf("%x", H[5]);
-    printf("%x", H[6]);
-    printf("%x", H[7]);
+    printf("%08llx", H[0]);
+    printf("%08llx", H[1]);
+    printf("%08llx", H[2]);
+    printf("%08llx", H[3]);
+    printf("%08llx", H[4]);
+    printf("%08llx", H[5]);
+    printf("%08llx", H[6]);
+    printf("%08llx", H[7]);
     
     printf("\n\n==================================================================\n\n");
 
@@ -279,10 +290,10 @@ int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *stat
         {
             // 0x80 = 10000000
             msgBlock->e[0] = 0x01;
-
-            // keep the loop in SHA256 going for one more iteration
-            return 1;
         }
+
+        // keep the loop in SHA256 going for one more iteration
+        return 1;
     }
 
     // Read bytes instead of characters
@@ -397,7 +408,7 @@ int calcFileSize(FILE *file)
     return size;
 }
 
-int endianCheck()
+void endianCheckPrint()
 {
     int num = 1;
         if(*(char *)&num == 1) {
@@ -407,6 +418,15 @@ int endianCheck()
         }
 }
 
+_Bool endianCheck()
+{
+    int num = 1 ;
+        if(*(char *)&num == 1) {
+                return false;
+        } else {
+                return true;
+        }
+}
 // Reference - http://www.firmcodes.com/write-c-program-convert-little-endian-big-endian-integer/
 // Converts a little endian integer to big endian and vice versa (32 bit version)
 __uint32_t byteSwap32(__uint32_t x)
@@ -425,6 +445,7 @@ __uint64_t byteSwap64(__uint64_t integer)
     x = (x & 0x00FF00FF00FF00FF) << 8  | (x & 0xFF00FF00FF00FF00) >> 8;
     return x;
 }
+
 // Section 4.1.2  
 // ROTR = Rotate Right 
 // SHR = Shift Right

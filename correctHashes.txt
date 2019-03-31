@@ -1,7 +1,7 @@
 The following file contains the right hashes for the following files
 
-Test File 1: 181c8b1465a16f2d8d37a51092892182c9b8f049fad499fcf41520379dab22ca
-Test File 2: bc9c7f1c1ad80e90c59b19f7d3881efd025223ded616d2926e47ac83bb930c6a
-Test File 3: 8841b9ea07e08a3dad0dc6f02e09d1d8dfc79b1ae04d4007332b45e641b15f11
+Test File 1: ba7816bf 8f01cfea 414140de 5dae2223 b00361a3 96177a9c b410ff61 f20015ad
+Test File 2: e3b0c442 98fc1c14 9afbf4c8 996fb924 27ae41e4 649b934c a495991b 7852b855
+Test File 3: 248d6a61 d20638b8 e5c02693 0c3e6039 a33ce459 64ff2167 f6ecedd4 19db06c1
 
-Hashes generated using https://www.movable-type.co.uk/scripts/sha256.html
+Hashes generated using https://www.di-mgt.com.au/sha_testvectors.html
