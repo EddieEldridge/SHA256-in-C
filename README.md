@@ -23,11 +23,19 @@ The project was done under the guidance of video lectures uploaded by Ian McLoug
 During the implementation of the project, research about the algorthim and it's standards was undertaken to try
 and better understand the intricacies of the algorthim. 
 
-![image](https://user-images.githubusercontent.com/22448079/55245841-e4ff5e80-523b-11e9-96b1-277ee6f65d2d.png)
+The script correctly calculates the correct hash, this can be seen here. To fix the problem of the algorthim giving an incorrect hash, I had to add a missing 2 to my `K` constant variable and change some of the SIG functions.
 
-The program does not calculate the correct hash, however the length of the hash is correct (124 characters).
+![Screenshot from 2019-03-31 14-33-18](https://user-images.githubusercontent.com/22448079/55289790-16eefd00-53c3-11e9-8221-f0813ea398d2.png)
 
 Check correctHashes.txt for more info.
+
+
+The correct hashes for the given strings are as follows
+
+* `abc` = `ba7816bf 8f01cfea 414140de 5dae2223 b00361a3 96177a9c b410ff61 f20015ad`
+* ` ` = `e3b0c442 98fc1c14 9afbf4c8 996fb924 27ae41e4 649b934c a495991b 7852b855`
+* `abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq` = `248d6a61 d20638b8 e5c02693 0c3e6039 a33ce459 64ff2167 f6ecedd4 19db06c1`
+  
 
 # Research
 * [How Does SHA256 Work?](https://www.youtube.com/watch?v=mbekM2ErHfM)
@@ -39,3 +47,5 @@ Check correctHashes.txt for more info.
 * [US Government SHA256 Standard](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf)
 
 * [Little Endian vs Big Endian](https://www.geeksforgeeks.org/little-and-big-endian-mystery/)
+
+* [Converting Little to Big Endian and Vice Versaa](https://stackoverflow.com/questions/19275955/convert-little-endian-to-big-endian)
