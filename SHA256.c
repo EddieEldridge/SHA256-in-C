@@ -9,6 +9,13 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
+#define byteSwap32(x) (((x) >> 24) | (((x)&0x00FF0000) >> 8) | (((x)&0x0000FF00) << 8) | ((x) << 24))
+#define byteSwap64(x)                                                      \
+	((((x) >> 56) & 0x00000000000000FF) | (((x) >> 40) & 0x000000000000FF00) | \
+	 (((x) >> 24) & 0x0000000000FF0000) | (((x) >> 8) & 0x00000000FF000000) |  \
+	 (((x) << 8) & 0x000000FF00000000) | (((x) << 24) & 0x0000FF0000000000) |  \
+	 (((x) << 40) & 0x00FF000000000000) | (((x) << 56) & 0xFF00000000000000))
+
 // Define a union for easy reference
 // Union represents a message block
 union messageBlock
@@ -49,8 +56,7 @@ _Bool endianCheck();
 int fillMessageBlock();
 void calculateHash(FILE *file);
 int nextMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *state, __uint64_t *numBits);
-__uint32_t byteSwap32(__uint32_t x);
-__uint64_t byteSwap64(__uint64_t x);
+
 
 // ==== Main ===
 int main(int argc, char *argv[]) 
@@ -86,7 +92,7 @@ int main(int argc, char *argv[])
         {
             // Function calls
             printf("\n File ok, executing functions.. \n");
-            endianCheckPrint();
+            //endianCheckPrint();
             //printFileContents(file);
             calculateHash(file);
 
@@ -138,7 +144,7 @@ void calculateHash(FILE *file)
         0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5,
         0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3, 
         0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
-        0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f
+        0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
     };
 
     // Message schedule
@@ -427,26 +433,6 @@ _Bool endianCheck()
                 return true;
         }
 }
-// Reference - http://www.firmcodes.com/write-c-program-convert-little-endian-big-endian-integer/
-// Converts a little endian integer to big endian and vice versa (32 bit version)
-__uint32_t byteSwap32(__uint32_t x)
-{
-    x = (x & 0xffff0000) >> 16 | (x & 0x0000ffff) << 16;
-    x = (x & 0xff00ff00) >>  8 | (x & 0x00ff00ff) <<  8;
-    return x;
-}
-
-
-// Reference - https://stackoverflow.com/questions/21507678/reverse-bytes-for-64-bit-value
-// Converts a little endian integer to big endian and vice versa (64 bit version)
-__uint64_t byteSwap64(__uint64_t integer)
-{
-    uint64_t x = (uint64_t) integer;
-    x = (x & 0x00000000FFFFFFFF) << 32 | (x & 0xFFFFFFFF00000000) >> 32;
-    x = (x & 0x0000FFFF0000FFFF) << 16 | (x & 0xFFFF0000FFFF0000) >> 16;
-    x = (x & 0x00FF00FF00FF00FF) << 8  | (x & 0xFF00FF00FF00FF00) >> 8;
-    return x;
-}
 
 // Section 4.1.2  
 // ROTR = Rotate Right 
@@ -456,44 +442,44 @@ __uint64_t byteSwap64(__uint64_t integer)
 __uint32_t sig0(__uint32_t x)
 {
     // Section 3.2
-    return rotr(x, 7) ^ rotr(x, 18) ^ shr(x, 3);
+	return (rotr(x, 7) ^ rotr(x, 18) ^ shr(x, 3));
 };
 
 __uint32_t sig1(__uint32_t x)
 {
-    return rotr(x, 17) ^ rotr(x, 19) ^ shr(x, 10);
+	return (rotr(x, 17) ^ rotr(x, 19) ^ shr(x, 10));
 };
 
 // Rotate bits right
-__uint32_t rotr(__uint32_t n, __uint16_t x)
+__uint32_t rotr(__uint32_t x, __uint16_t a)
 {
-    return (x >> n) | (x << (32-n));
+	return (x >> a) | (x << (32 - a));
 };
 
 // Shift bits right
-__uint32_t shr(__uint32_t n, __uint16_t x)
+__uint32_t shr(__uint32_t x, __uint16_t b)
 {
-    return (x >> n);
+	return (x >> b);
 };
 
 __uint32_t SIG0(__uint32_t x)
 {
-    return (rotr(x,2) ^ rotr(x, 13) ^ rotr(x,22));
+	return (rotr(x, 2) ^ rotr(x, 13) ^ rotr(x, 22));
 };
 
 __uint32_t SIG1(__uint32_t x)
 {
-    return (rotr(x,6) ^ rotr(x, 11) ^ rotr(x,25));
+	return (rotr(x, 6) ^ rotr(x, 11) ^ rotr(x, 25));
 };
 
 // Choose
 __uint32_t Ch(__uint32_t x,__uint32_t y,__uint32_t z)
 {
-    return ((x & y) ^ ((~x) & z));
+	return ((x & y) ^ (~(x)&z));
 };
 
 // Majority decision
 __uint32_t Maj(__uint32_t x,__uint32_t y,__uint32_t z)
 {
-    return (x & y) ^ (x & z) ^ (y & z);
+	return ((x & y) ^ (x & z) ^ (y & z));
 };
