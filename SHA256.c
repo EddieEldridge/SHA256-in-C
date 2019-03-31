@@ -47,6 +47,8 @@ int endianCheck();
 int fillMessageBlock();
 void calculateHash(FILE *file);
 int nextMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *state, __uint64_t *numBits);
+__uint32_t byteSwap32(__uint32_t x);
+__uint64_t byteSwap64(__uint64_t x);
 
 // ==== Main ===
 int main(int argc, char *argv[]) 
@@ -173,7 +175,8 @@ void calculateHash(FILE *file)
         for(j=0; j<16; j++)
         {
             // Add the current message block to our messag schedule
-            W[j] = msgBlock.t[j];
+            // Convert to big endian first
+            W[j] = byteSwap32(msgBlock.t[j]);
         }
 
         for (j=16; j<64; j++)
@@ -404,6 +407,24 @@ int endianCheck()
         }
 }
 
+// Reference - http://www.firmcodes.com/write-c-program-convert-little-endian-big-endian-integer/
+// Converts a little endian integer to big endian and vice versa (32 bit version)
+__uint64_t byteSwap32(__uint64_t x)
+{
+    return (((x>>24) & 0x000000ff) | ((x>>8) & 0x0000ff00) | ((x<<8) & 0x00ff0000) | ((x<<24) & 0xff000000));
+}
+
+
+// Reference - https://stackoverflow.com/questions/21507678/reverse-bytes-for-64-bit-value
+// Converts a little endian integer to big endian and vice versa (64 bit version)
+__uint64_t byteSwap64(__uint64_t x)
+{
+    uint64_t x = (uint64_t) x;
+    x = (x & 0x00000000FFFFFFFF) << 32 | (x & 0xFFFFFFFF00000000) >> 32;
+    x = (x & 0x0000FFFF0000FFFF) << 16 | (x & 0xFFFF0000FFFF0000) >> 16;
+    x = (x & 0x00FF00FF00FF00FF) << 8  | (x & 0xFF00FF00FF00FF00) >> 8;
+    return x;
+}
 // Section 4.1.2  
 // ROTR = Rotate Right 
 // SHR = Shift Right
