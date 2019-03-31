@@ -310,7 +310,7 @@ int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *stat
         }
 
         // Store the length of the file in bits as a (Should be big endian) unsigned 64 bit int
-        msgBlock->s[7] = *numBits;
+        msgBlock->s[7] = byteSwap64(*numBits);
 
         // Change the state of our program
         *state = FINISH;
@@ -434,13 +434,13 @@ __uint32_t sig0(__uint32_t x)
 {
     // Section 3.2
    
-    return (rotr(7,x) ^ rotr(18, x) ^ shr(3,x));
+    return (rotr(x,7) ^ rotr(x, 18) ^ ((x) >> 3));
 
 };
 
 __uint32_t sig1(__uint32_t x)
 {
-    return (rotr(17,x) ^ rotr(19,x) ^ shr(10,x));
+    return (rotr(x,17) ^ rotr(x,19) ^ ((x) >> 10));
 };
 
 // Rotate bits right
@@ -457,18 +457,18 @@ __uint32_t shr(__uint32_t n, __uint16_t x)
 
 __uint32_t SIG0(__uint32_t x)
 {
-    return (rotr(2,x) ^ rotr(13, x) ^ rotr(22,x));
+    return (rotr(x,2) ^ rotr(x, 13) ^ rotr(x,22));
 };
 
 __uint32_t SIG1(__uint32_t x)
 {
-    return (rotr(6,x) ^ rotr(11, x) ^ rotr(25,x));
+    return (rotr(x,6) ^ rotr(x, 11) ^ rotr(x,25));
 };
 
 // Choose
 __uint32_t Ch(__uint32_t x,__uint32_t y,__uint32_t z)
 {
-    return ((x & y) ^ ((!x) & z));
+    return ((x & y) ^ (~(x) & z));
 };
 
 // Majority decision
