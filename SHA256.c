@@ -20,9 +20,9 @@
 // Union represents a message block
 union messageBlock
 {
-    __uint8_t e[64];
-    __uint32_t t[16];
-    __uint64_t s[8];
+    uint8_t e[64];
+    uint32_t t[16];
+    uint64_t s[8];
 };
 
 // ENUM to control state of the program
@@ -37,17 +37,17 @@ enum status{READ,
 
 // Function decleration
 // See Section 4.1.2
-__uint32_t sig0(__uint32_t x);
-__uint32_t sig1(__uint32_t x);
+uint32_t sig0(uint32_t x);
+uint32_t sig1(uint32_t x);
 
-__uint32_t rotr(__uint32_t n, __uint16_t x);
-__uint32_t shr(__uint32_t n, __uint16_t x);
+uint32_t rotr(uint32_t n, uint16_t x);
+uint32_t shr(uint32_t n, uint16_t x);
 
-__uint32_t SIG0(__uint32_t x);
-__uint32_t SIG1(__uint32_t x);
+uint32_t SIG0(uint32_t x);
+uint32_t SIG1(uint32_t x);
 
-__uint32_t Ch(__uint32_t x,__uint32_t y,__uint32_t z);
-__uint32_t Maj(__uint32_t x,__uint32_t y,__uint32_t z);
+uint32_t Ch(uint32_t x,uint32_t y,uint32_t z);
+uint32_t Maj(uint32_t x,uint32_t y,uint32_t z);
 
 void printFileContents();
 int calcFileSize();
@@ -55,7 +55,7 @@ void endianCheckPrint();
 _Bool endianCheck();
 int fillMessageBlock();
 void calculateHash(FILE *file);
-int nextMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *state, __uint64_t *numBits);
+int nextMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *state, uint64_t *numBits);
 
 
 // ==== Main ===
@@ -120,7 +120,7 @@ void calculateHash(FILE *file)
     union messageBlock msgBlock;
 
     // The number of bits read from the file
-    __uint64_t numBits = 0;
+    uint64_t numBits = 0;
 
     // The state of the program
     enum status state = READ;
@@ -129,7 +129,7 @@ void calculateHash(FILE *file)
 
     // Declare the K constant
     // Defined in Section 4.2.2
-    __uint32_t K[] =
+    uint32_t K[] =
     {
         0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 
         0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
@@ -150,18 +150,18 @@ void calculateHash(FILE *file)
     };
 
     // Message schedule
-    __uint32_t W[64];
+    uint32_t W[64];
 
     // Working variables
-    __uint32_t a, b, c, d, e, f, g, h;
+    uint32_t a, b, c, d, e, f, g, h;
 
     // Temp variables
-    __uint32_t T1;
-    __uint32_t T2;
+    uint32_t T1;
+    uint32_t T2;
 
     // Hash values
     // Taken from https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
-    __uint32_t H[8] = {
+    uint32_t H[8] = {
         0x6a09e667,
         0xbb67ae85,
         0x3c6ef372,
@@ -263,10 +263,10 @@ void calculateHash(FILE *file)
 }
 
 // This function is used to handle the opening and reading of files
-int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *state, __uint64_t *numBits)
+int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *state, uint64_t *numBits)
 {   
     // Variables
-    __uint64_t numBytes;
+    uint64_t numBytes;
     int i;
 
     // If we've finished padding and processing all the message blocks, exit
@@ -444,47 +444,47 @@ _Bool endianCheck()
 // SHR = Shift Right
 // ROTR_n(x) = (x >> n) | (x << (32-n))
 // SHR_n(x) = (x >> n)
-__uint32_t sig0(__uint32_t x)
+uint32_t sig0(uint32_t x)
 {
     // Section 3.2
 	return (rotr(x, 7) ^ rotr(x, 18) ^ shr(x, 3));
 };
 
-__uint32_t sig1(__uint32_t x)
+uint32_t sig1(uint32_t x)
 {
 	return (rotr(x, 17) ^ rotr(x, 19) ^ shr(x, 10));
 };
 
 // Rotate bits right
-__uint32_t rotr(__uint32_t x, __uint16_t a)
+uint32_t rotr(uint32_t x, uint16_t a)
 {
 	return (x >> a) | (x << (32 - a));
 };
 
 // Shift bits right
-__uint32_t shr(__uint32_t x, __uint16_t b)
+uint32_t shr(uint32_t x, uint16_t b)
 {
 	return (x >> b);
 };
 
-__uint32_t SIG0(__uint32_t x)
+uint32_t SIG0(uint32_t x)
 {
 	return (rotr(x, 2) ^ rotr(x, 13) ^ rotr(x, 22));
 };
 
-__uint32_t SIG1(__uint32_t x)
+uint32_t SIG1(uint32_t x)
 {
 	return (rotr(x, 6) ^ rotr(x, 11) ^ rotr(x, 25));
 };
 
 // Choose
-__uint32_t Ch(__uint32_t x,__uint32_t y,__uint32_t z)
+uint32_t Ch(uint32_t x,uint32_t y,uint32_t z)
 {
 	return ((x & y) ^ (~(x)&z));
 };
 
 // Majority decision
-__uint32_t Maj(__uint32_t x,__uint32_t y,__uint32_t z)
+uint32_t Maj(uint32_t x,uint32_t y,uint32_t z)
 {
 	return ((x & y) ^ (x & z) ^ (y & z));
 };
