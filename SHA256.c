@@ -298,7 +298,7 @@ int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *stat
         if(*state == PAD1)
         {
             // 0x80 = 10000000
-            msgBlock->e[0] = 0x01;
+            msgBlock->e[0] = 0x80;
         }
 
         // keep the loop in SHA256 going for one more iteration
