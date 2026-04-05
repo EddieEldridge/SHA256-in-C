@@ -344,12 +344,13 @@ int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *stat
         // 0x80 = 10000000
         // Add the one bit into the current message block
         msgBlock->e[numBytes] = 0x80;
+        numBytes = numBytes + 1;
 
         // Pad the rest of the message block with 0 bits
         while(numBytes < 64)
         {
-            numBytes = numBytes + 1;
             msgBlock->e[numBytes] = 0x00;
+            numBytes = numBytes + 1;
         }
     }
     // Otherwise if we're at the end of the file, need to create a new message block full of padding
