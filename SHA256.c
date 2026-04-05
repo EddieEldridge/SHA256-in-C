@@ -1,4 +1,4 @@
-// Author: Edward Eldridge 
+// Author: Edward Eldridge
 // Program: SHA-256 Algorithm implentation in C
 // Resources: https://github.com/EddieEldridge/SHA256-in-C/blob/master/README.md
 // Section Reference: https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
@@ -9,26 +9,16 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
-#define byteSwap32(x) (((x) >> 24) | (((x)&0x00FF0000) >> 8) | (((x)&0x0000FF00) << 8) | ((x) << 24))
-#define byteSwap64(x)                                                      \
-	((((x) >> 56) & 0x00000000000000FF) | (((x) >> 40) & 0x000000000000FF00) | \
-	 (((x) >> 24) & 0x0000000000FF0000) | (((x) >> 8) & 0x00000000FF000000) |  \
-	 (((x) << 8) & 0x000000FF00000000) | (((x) << 24) & 0x0000FF0000000000) |  \
-	 (((x) << 40) & 0x00FF000000000000) | (((x) << 56) & 0xFF00000000000000))
-
-// Define a union for easy reference
-// Union represents a message block
-union messageBlock
+// Define a struct for easy reference,
+// representing a message block
+struct messageBlock
 {
     __uint8_t e[64];
-    __uint32_t t[16];
-    __uint64_t s[8];
 };
 
 // ENUM to control state of the program
-enum status{READ, 
+enum status{READ,
             PAD0,
-            PAD1,
             FINISH
             };
 
@@ -49,75 +39,83 @@ __uint32_t SIG1(__uint32_t x);
 __uint32_t Ch(__uint32_t x,__uint32_t y,__uint32_t z);
 __uint32_t Maj(__uint32_t x,__uint32_t y,__uint32_t z);
 
-void printFileContents();
-int calcFileSize();
-void endianCheckPrint();
-_Bool endianCheck();
-int fillMessageBlock();
-void calculateHash(FILE *file);
-int nextMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *state, __uint64_t *numBits);
+void printFileContents(FILE *fileForPrinting);
+int calcFileSize(FILE *file);
+int fillMessageBlock(FILE *file, struct messageBlock *msgBlock, enum status *state, __uint64_t *numBits, bool verbose);
+void calculateHash(FILE *file, bool verbose);
+int nextMessageBlock(FILE *file, struct messageBlock *msgBlock, enum status *state, __uint64_t *numBits);
+void storeNumBits(struct messageBlock *msgBlock, __uint64_t *numBits);
 
 
 // ==== Main ===
-int main(int argc, char *argv[]) 
-{   
+int main(int argc, char *argv[])
+{
      // Variables
     FILE *file;
     FILE *fileForPrinting;
     char* fileName;
     int argumentCount = argc;
+    bool verbose = true;
+    bool argumentsParsedSuccessfully = false;
 
-    // Print header
-    printf("\n======== SHA256 - HASHING ALGORITHM ========");
-
-    // Test to make sure the user is inputting a filename
-    if(argumentCount == 0)
-    {
-        printf("Please supply a file to hash as command line arguments.");
-        exit;
-    }
-    else if(argumentCount >= 1)
-    {
-        printf("\n Correct arguments. Attemping to read file.. \n");
-
+    if (argumentCount == 2) {
         fileName = argv[1];
-            
-        // Open a file, specifiying which file using command line arguments
-        fileForPrinting = fopen(fileName, "r");
-        file = fopen(fileName, "r");
-
-         // First check to make sure the file could be found
-        if (file == NULL){
-            printf("\n Could not open file %s\n", fileName);
+        argumentsParsedSuccessfully = true;
+    } else if (argumentCount == 3) {
+        if (strcmp(argv[1], "--quiet") == 0) {
+            verbose = false;
+            fileName = argv[2];
+            argumentsParsedSuccessfully = true;
+        } else if (strcmp(argv[2], "--quiet") == 0) {
+            fileName = argv[1];
+            verbose = false;
+            argumentsParsedSuccessfully = true;
         }
-        else
-        {
-            // Function calls
-            printf("\n File ok, executing functions.. \n");
-            endianCheckPrint();
-            printFileContents(fileForPrinting);
+    }
 
-             // Open a file, specifiying which file using command line arguments
-            calculateHash(file);
+    if (!argumentsParsedSuccessfully) {
+        printf("USAGE: %s FILENAME [--quiet]\n", argv[0]);
+        return 1;
+    }
 
-        }
+    if (verbose) {
+        // Print header
+        printf("\n======== SHA256 - HASHING ALGORITHM ========");
+        printf("\n Correct arguments. Attemping to read file.. \n");
+    }
+
+    // Open a file, specifiying which file using command line arguments
+    fileForPrinting = fopen(fileName, "r");
+    file = fopen(fileName, "r");
+
+     // First check to make sure the file could be found
+    if (file == NULL){
+        printf("\n Could not open file %s\n", fileName);
+        return 1;
     }
     else
     {
-        printf("Invalid arguments, please recheck your spelling.");
-        exit;
+        // Function calls
+        if (verbose) {
+            printf("\n File ok, executing functions.. \n");
+            printFileContents(fileForPrinting);
+        }
+
+         // Open a file, specifiying which file using command line arguments
+        calculateHash(file, verbose);
+
     }
-    
+
     return 0;
 
 }
 
 // === Functions ===
-void calculateHash(FILE *file)
-{   
+void calculateHash(FILE *file, bool verbose)
+{
     // Variables
     // The current message block
-    union messageBlock msgBlock;
+    struct messageBlock msgBlock;
 
     // The number of bits read from the file
     __uint64_t numBits = 0;
@@ -125,26 +123,28 @@ void calculateHash(FILE *file)
     // The state of the program
     enum status state = READ;
 
-    printf("\n Starting SHA256 algorithm....\n");
+    if (verbose) {
+        printf("\n Starting SHA256 algorithm....\n");
+    }
 
     // Declare the K constant
     // Defined in Section 4.2.2
     __uint32_t K[] =
     {
-        0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 
+        0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
         0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
         0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
         0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
         0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc,
         0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
-        0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 
-        0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 
+        0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7,
+        0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
         0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,
         0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
         0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3,
         0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
         0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5,
-        0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3, 
+        0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
         0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
         0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
     };
@@ -174,29 +174,22 @@ void calculateHash(FILE *file)
 
     // The current message block
 
-    // For loop to iterate through the message block 
+    // For loop to iterate through the message block
     int j;
-    int o;
 
-    printf("\n Initalized variables... Entering loops\n");
+    if (verbose) {
+        printf("\n Initalized variables... Entering loops\n");
+    }
 
-    while(fillMessageBlock(file, &msgBlock, &state, &numBits))
+    while(fillMessageBlock(file, &msgBlock, &state, &numBits, verbose))
     {
         for(j=0; j<16; j++)
-        {   
-            // Fist check for big or little endian
-            // If our system is big endian we dont need to do any conversion
-            if(endianCheck()==true)
-            {
-                W[j] = msgBlock.t[j];
-            }
-            else
-            {
-                // Add the current message block to our messag schedule
-                // Convert to big endian first
-                W[j] = byteSwap32(msgBlock.t[j]);
-            }
-           
+        {
+            // Add the current message block to our message schedule
+            W[j] = (msgBlock.e[j * 4 + 0] << (8 * 3)) +
+                   (msgBlock.e[j * 4 + 1] << (8 * 2)) +
+                   (msgBlock.e[j * 4 + 2] << (8 * 1)) +
+                   (msgBlock.e[j * 4 + 3] << (8 * 0));
         }
 
         for (j=16; j<64; j++)
@@ -243,28 +236,32 @@ void calculateHash(FILE *file)
         H[5] = f + H[5];
         H[6] = g + H[6];
         H[7] = h + H[7];
-    
+
     }// end while
-    
+
     // Print the results
-    printf("\n=================== HASH OUTPUT ==================================\n\n");
-    printf("%08llx", H[0]);
-    printf("%08llx", H[1]);
-    printf("%08llx", H[2]);
-    printf("%08llx", H[3]);
-    printf("%08llx", H[4]);
-    printf("%08llx", H[5]);
-    printf("%08llx", H[6]);
-    printf("%08llx", H[7]);
-    
-    printf("\n\n==================================================================\n\n");
+    if (verbose) {
+        printf("\n=================== HASH OUTPUT ==================================\n\n");
+    }
+    printf("%08llx", (long long unsigned int) H[0]);
+    printf("%08llx", (long long unsigned int) H[1]);
+    printf("%08llx", (long long unsigned int) H[2]);
+    printf("%08llx", (long long unsigned int) H[3]);
+    printf("%08llx", (long long unsigned int) H[4]);
+    printf("%08llx", (long long unsigned int) H[5]);
+    printf("%08llx", (long long unsigned int) H[6]);
+    printf("%08llx\n", (long long unsigned int) H[7]);
+
+    if (verbose) {
+        printf("\n==================================================================\n\n");
+    }
 
     fclose(file);
 }
 
 // This function is used to handle the opening and reading of files
-int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *state, __uint64_t *numBits)
-{   
+int fillMessageBlock(FILE *file, struct messageBlock *msgBlock, enum status *state, __uint64_t *numBits, bool verbose)
+{
     // Variables
     __uint64_t numBytes;
     int i;
@@ -272,15 +269,19 @@ int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *stat
     // If we've finished padding and processing all the message blocks, exit
     if(*state == FINISH)
     {
-        printf("\n State = FINISH.\n");
+        if (verbose) {
+            printf("\n State = FINISH.\n");
+        }
         return 0;
     }
 
-    // Handle our PAD0 and PAD1 states
+    // Handle our PAD0 states
     // Check if we need another block full of padding
-    if(*state == PAD0 || *state == PAD1)
+    if(*state == PAD0)
     {
-        printf("\n State = PAD0 or PAD1.\n");
+        if (verbose) {
+            printf("\n State = PAD0.\n");
+        }
 
         // Set the first 56 bytes to all zero bits
         for(i=0; i<56; i++)
@@ -289,17 +290,10 @@ int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *stat
         }
 
         // Set the last 64 bits to an integer (should be big endian)
-        msgBlock->s[7] = byteSwap64(*numBits);
+        storeNumBits(msgBlock, numBits);
 
         // Set the state to finish
         *state = FINISH;
-
-        // If state is PAD1, set the first bit of msgBlock to 1
-        if(*state == PAD1)
-        {
-            // 0x80 = 10000000
-            msgBlock->e[0] = 0x80;
-        }
 
         // keep the loop in SHA256 going for one more iteration
         return 1;
@@ -308,10 +302,10 @@ int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *stat
     // Read bytes instead of characters
     // Read until the end of the file
     numBytes = fread(msgBlock->e, 1, 64, file);
-    
+
     // Keep track of the number of bytes we've read
     *numBits = *numBits + (numBytes * 8);
-    
+
     // If theres enough room to finish the padding
     if(numBytes < 56)
     {
@@ -324,42 +318,36 @@ int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *stat
         {
             // Add the index into our block
             numBytes = numBytes +1;
-            
+
             // Add enough zeroes so that there are 64 bits left at the end
             msgBlock->e[numBytes] = 0x00;
         }
 
         // Store the length of the file in bits as a (Should be big endian) unsigned 64 bit int
-        msgBlock->s[7] = byteSwap64(*numBits);
+        storeNumBits(msgBlock, numBits);
 
         // Change the state of our program
         *state = FINISH;
     }
     // Otherwise, check if we can put some padding into this message block
     else if(numBytes < 64)
-    {   
+    {
         // Set the state to PAD0
         *state = PAD0;
-        
+
         // 0x80 = 10000000
         // Add the one bit into the current message block
         msgBlock->e[numBytes] = 0x80;
+        numBytes = numBytes + 1;
 
         // Pad the rest of the message block with 0 bits
         while(numBytes < 64)
         {
-            numBytes = numBytes + 1;
             msgBlock->e[numBytes] = 0x00;
+            numBytes = numBytes + 1;
         }
     }
-    // Otherwise if we're at the end of the file, need to create a new message block full of padding
-    else if(feof(file))
-    {
-        // Set the state to PAD1
-        // We need a message Block full of padding
-        *state = PAD1;
-    }
-    
+
     // Print padding
     /*
     printf("\n--- PADDING --- \n");
@@ -371,13 +359,25 @@ int fillMessageBlock(FILE *file, union messageBlock *msgBlock, enum status *stat
     */
     return 1;
 }
-    
+
+// Store the number of bits processed so far in the last 64 bits of the message block.
+void storeNumBits(struct messageBlock *msgBlock, __uint64_t *numBits)
+{
+    msgBlock->e[64-8] = *numBits >> (7 * 8) & 0xff;
+    msgBlock->e[64-7] = *numBits >> (6 * 8) & 0xff;
+    msgBlock->e[64-6] = *numBits >> (5 * 8) & 0xff;
+    msgBlock->e[64-5] = *numBits >> (4 * 8) & 0xff;
+    msgBlock->e[64-4] = *numBits >> (3 * 8) & 0xff;
+    msgBlock->e[64-3] = *numBits >> (2 * 8) & 0xff;
+    msgBlock->e[64-2] = *numBits >> (1 * 8) & 0xff;
+    msgBlock->e[64-1] = *numBits >> (0 * 8) & 0xff;
+}
+
 // This function is used to read the contents of the file and return them as an array of chars
 void printFileContents(FILE *fileForPrinting)
 {
     // Variables
     char fileContents[MAXCHAR];
-    char fileContentsAsString[MAXCHAR];
     long fileSize;
 
     // First check to make sure the file could be found
@@ -389,7 +389,7 @@ void printFileContents(FILE *fileForPrinting)
         // Calculate the size of the file
         fileSize = calcFileSize(fileForPrinting);
 
-        printf("\n File Size (characters): %d \n", fileSize);
+        printf("\n File Size (characters): %ld \n", fileSize);
 
         printf("\n ============= File Contents ============= \n");
 
@@ -399,15 +399,15 @@ void printFileContents(FILE *fileForPrinting)
             // Print the contents of the file
             printf(" %s\n", fileContents);
         };
-        
+
         printf("\n ========================================= \n");
 
         fclose(fileForPrinting);
 
-        // Close the file 
+        // Close the file
         return;
     }
-    
+
 }
 // Simple function that calcuates the size of a file
 int calcFileSize(FILE *file)
@@ -415,32 +415,12 @@ int calcFileSize(FILE *file)
     int prev=ftell(file);
     fseek(file, 0L, SEEK_END);
     int size=ftell(file);
-    fseek(file,prev,SEEK_SET); 
+    fseek(file,prev,SEEK_SET);
     return size;
 }
 
-void endianCheckPrint()
-{
-    int num = 1;
-        if(*(char *)&num == 1) {
-                printf("\n Your system is Little-Endian!\n");
-        } else {
-                printf("Your system is Big-Endian!\n");
-        }
-}
-
-_Bool endianCheck()
-{
-    int num = 1 ;
-        if(*(char *)&num == 1) {
-                return false;
-        } else {
-                return true;
-        }
-}
-
-// Section 4.1.2  
-// ROTR = Rotate Right 
+// Section 4.1.2
+// ROTR = Rotate Right
 // SHR = Shift Right
 // ROTR_n(x) = (x >> n) | (x << (32-n))
 // SHR_n(x) = (x >> n)
@@ -448,43 +428,43 @@ __uint32_t sig0(__uint32_t x)
 {
     // Section 3.2
 	return (rotr(x, 7) ^ rotr(x, 18) ^ shr(x, 3));
-};
+}
 
 __uint32_t sig1(__uint32_t x)
 {
 	return (rotr(x, 17) ^ rotr(x, 19) ^ shr(x, 10));
-};
+}
 
 // Rotate bits right
 __uint32_t rotr(__uint32_t x, __uint16_t a)
 {
 	return (x >> a) | (x << (32 - a));
-};
+}
 
 // Shift bits right
 __uint32_t shr(__uint32_t x, __uint16_t b)
 {
 	return (x >> b);
-};
+}
 
 __uint32_t SIG0(__uint32_t x)
 {
 	return (rotr(x, 2) ^ rotr(x, 13) ^ rotr(x, 22));
-};
+}
 
 __uint32_t SIG1(__uint32_t x)
 {
 	return (rotr(x, 6) ^ rotr(x, 11) ^ rotr(x, 25));
-};
+}
 
 // Choose
 __uint32_t Ch(__uint32_t x,__uint32_t y,__uint32_t z)
 {
 	return ((x & y) ^ (~(x)&z));
-};
+}
 
 // Majority decision
 __uint32_t Maj(__uint32_t x,__uint32_t y,__uint32_t z)
 {
 	return ((x & y) ^ (x & z) ^ (y & z));
-};
+}
